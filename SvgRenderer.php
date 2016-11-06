@@ -65,8 +65,8 @@ class SvgRenderer extends Service
         $attributes = $this->attributesToArray($this->svg);
         $viewbox = [];
         
-        if ( empty($this->size) ) {
-            $this->size = [$attributes['width'], $attributes['height']];
+        if ( empty($this->size) && !empty($attributes['width']) && !empty($attributes['width']) ) {
+            $this->setSize($attributes['width'], $attributes['height']);
         }
 
         $time = microtime(true);
@@ -74,16 +74,22 @@ class SvgRenderer extends Service
         if ( isset($attributes['viewbox']) ) {
             $viewbox = explode(' ', $attributes['viewbox'], 4);
             $this->image = imagecreatetruecolor($viewbox[2] + $viewbox[0], $viewbox[3] + $viewbox[1]);
+            
+            if ( empty($this->size) ) {
+                $this->setSize($viewbox[2], $viewbox[3]);
+            }
         } else {
             $this->image = imagecreatetruecolor($attributes['width'], $attributes['height']);
         }
         
         $this->addBackground($this->image);
+        $this->shapes->setImage($this->image);
 
         foreach ( $this->svg AS $shape => $values ) {
             $shape = strtolower($shape);
             if ( method_exists($this->shapes, $shape) ) {
-                $this->shapes->{$shape}($values, $this->image);
+                $this->shapes->setElement($values);
+                $this->shapes->{$shape}();
             }
         }
         
